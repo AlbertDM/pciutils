@@ -3,7 +3,9 @@
  *
  *	Copyright (c) 1997--2020 Martin Mares <mj@ucw.cz>
  *
- *	Can be freely distributed and used under the terms of the GNU GPL.
+ *	Can be freely distributed and used under the terms of the GNU GPL v2+
+ *
+ *	SPDX-License-Identifier: GPL-2.0-or-later
  */
 
 #ifdef __GNUC__
@@ -21,7 +23,12 @@ typedef u8 byte;
 typedef u16 word;
 
 #ifdef PCI_OS_WINDOWS
-#define strcasecmp strcmpi
+#define strcasecmp _strcmpi
+#define strncasecmp _strnicmp
+#if defined(_MSC_VER) && _MSC_VER < 1900
+#define snprintf _snprintf
+#define vsnprintf _vsnprintf
+#endif
 #endif
 
 #ifdef PCI_HAVE_LINUX_BYTEORDER_H
@@ -66,7 +73,6 @@ typedef u16 word;
   #define BIG_ENDIAN 4321
   #define LITTLE_ENDIAN	1234
   #define BYTE_ORDER LITTLE_ENDIAN
-  #define snprintf _snprintf
 #endif
 #endif
 

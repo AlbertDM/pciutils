@@ -3,7 +3,9 @@
  *
  *	Copyright (c) 1997--2003 Martin Mares <mj@ucw.cz>
  *
- *	Can be freely distributed and used under the terms of the GNU GPL.
+ *	Can be freely distributed and used under the terms of the GNU GPL v2+.
+ *
+ *	SPDX-License-Identifier: GPL-2.0-or-later
  */
 
 #define _GNU_SOURCE
@@ -11,6 +13,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/types.h>
@@ -69,9 +72,11 @@ proc_scan(struct pci_access *a)
     {
       struct pci_dev *d = pci_alloc_dev(a);
       unsigned int dfn, vend, cnt, known;
+      char *driver;
+      int offset;
 
 #define F " " PCIADDR_T_FMT
-      cnt = sscanf(buf, "%x %x %x" F F F F F F F F F F F F F F,
+      cnt = sscanf(buf, "%x %x %x" F F F F F F F F F F F F F F "%n",
 	     &dfn,
 	     &vend,
 	     &d->irq,
@@ -88,7 +93,8 @@ proc_scan(struct pci_access *a)
 	     &d->size[3],
 	     &d->size[4],
 	     &d->size[5],
-	     &d->rom_size);
+	     &d->rom_size,
+	     &offset);
 #undef F
       if (cnt != 9 && cnt != 10 && cnt != 17)
 	a->error("proc: parse error (read only %d items)", cnt);
@@ -106,6 +112,20 @@ proc_scan(struct pci_access *a)
 	  if (cnt >= 17)
 	    known |= PCI_FILL_SIZES;
 	}
+      if (cnt >= 17)
+        {
+          while (buf[offset] && isspace(buf[offset]))
+            ++offset;
+          driver = &buf[offset];
+          while (buf[offset] && !isspace(buf[offset]))
+            ++offset;
+          buf[offset] = '\0';
+          if (driver[0])
+            {
+              pci_set_property(d, PCI_FILL_DRIVER, driver);
+              known |= PCI_FILL_DRIVER;
+            }
+        }
       d->known_fields = known;
       pci_link_dev(a, d);
     }

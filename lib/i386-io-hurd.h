@@ -7,7 +7,9 @@
  *	                   Thomas Schwinge <tschwinge@gnu.org>
  *	Copyright (c) 2007 Thomas Schwinge <tschwinge@gnu.org>
  *
- *	Can be freely distributed and used under the terms of the GNU GPL.
+ *	Can be freely distributed and used under the terms of the GNU GPL v2+
+ *
+ *	SPDX-License-Identifier: GPL-2.0-or-later
  */
 
 #include <sys/io.h>
@@ -18,12 +20,10 @@ intel_setup_io(struct pci_access *a UNUSED)
   return (ioperm (0, 65535, 1) == -1) ? 0 : 1;
 }
 
-static inline int
+static inline void
 intel_cleanup_io(struct pci_access *a UNUSED)
 {
   ioperm (0, 65535, 0);
-
-  return -1;
 }
 
 static inline void intel_io_lock(void)

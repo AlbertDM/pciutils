@@ -3,7 +3,9 @@
  *
  *	Copyright (c) 1999 Jari Kirma <kirma@cs.hut.fi>
  *
- *	Can be freely distributed and used under the terms of the GNU GPL.
+ *	Can be freely distributed and used under the terms of the GNU GPL v2+.
+ *
+ *	SPDX-License-Identifier: GPL-2.0-or-later
  */
 
 /*
@@ -206,7 +208,7 @@ aix_scan(struct pci_access *a)
       bus_number = pci_buses[i].bus_number;
       if (!busmap[bus_number])
         {
-          pci_generic_scan_bus(a, busmap, bus_number);
+          pci_generic_scan_bus(a, busmap, 0, bus_number);
         }
     }
 }

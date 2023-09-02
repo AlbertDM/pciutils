@@ -3,7 +3,9 @@
  *
  *	Copyright (c) 1997--2008 Martin Mares <mj@ucw.cz>
  *
- *	Can be freely distributed and used under the terms of the GNU GPL.
+ *	Can be freely distributed and used under the terms of the GNU GPL v2+.
+ *
+ *	SPDX-License-Identifier: GPL-2.0-or-later
  */
 
 #include <stdio.h>
@@ -90,7 +92,9 @@ dump_init(struct pci_access *a)
       else if (!len)
 	dev = NULL;
       else if (dev &&
-	       (dump_validate(buf, "##: ") || dump_validate(buf, "###: ")) &&
+	       (dump_validate(buf, "##: ") || dump_validate(buf, "###: ") || dump_validate(buf, "####: ") ||
+		dump_validate(buf, "#####: ") || dump_validate(buf, "######: ") ||
+		dump_validate(buf, "#######: ") || dump_validate(buf, "########: ")) &&
 	       sscanf(buf, "%x: ", &i) == 1)
 	{
 	  struct dump_data *dd = dev->aux;

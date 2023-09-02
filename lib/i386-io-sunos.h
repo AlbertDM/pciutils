@@ -4,7 +4,9 @@
  *	Copyright (c) 2003 Bill Moore <billm@eng.sun.com>
  *	Copyright (c) 2003--2006 Martin Mares <mj@ucw.cz>
  *
- *	Can be freely distributed and used under the terms of the GNU GPL.
+ *	Can be freely distributed and used under the terms of the GNU GPL v2+
+ *
+ *	SPDX-License-Identifier: GPL-2.0-or-later
  */
 
 #include <sys/sysi86.h>
@@ -16,11 +18,10 @@ intel_setup_io(struct pci_access *a UNUSED)
   return (sysi86(SI86V86, V86SC_IOPL, PS_IOPL) < 0) ? 0 : 1;
 }
 
-static inline int
+static inline void
 intel_cleanup_io(struct pci_access *a UNUSED)
 {
   /* FIXME: How to switch off I/O port access? */
-  return 1;
 }
 
 static inline u8

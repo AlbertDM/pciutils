@@ -3,7 +3,9 @@
  *
  *	Copyright (c) 2017 Joan Lledó <jlledom@member.fsf.org>
  *
- *	Can be freely distributed and used under the terms of the GNU GPL.
+ *	Can be freely distributed and used under the terms of the GNU GPL v2+.
+ *
+ *	SPDX-License-Identifier: GPL-2.0-or-later
  */
 
 #define _GNU_SOURCE
@@ -260,7 +262,7 @@ hurd_write(struct pci_dev *d, int pos, byte * buf, int len)
 
 /* Get requested info from the server */
 
-static void
+static int
 hurd_fill_regions(struct pci_dev *d)
 {
   mach_port_t device_port = device_port_lookup(d);
@@ -270,7 +272,7 @@ hurd_fill_regions(struct pci_dev *d)
 
   int err = pci_get_dev_regions(device_port, &buf, &size);
   if (err)
-    return;
+    return 0;
 
   if ((char *) &regions != buf)
     {
@@ -278,7 +280,7 @@ hurd_fill_regions(struct pci_dev *d)
       if (size > sizeof(regions))
 	{
 	  vm_deallocate(mach_task_self(), (vm_address_t) buf, size);
-	  return;
+	  return 0;
 	}
 
       memcpy(&regions, buf, size);
@@ -297,9 +299,11 @@ hurd_fill_regions(struct pci_dev *d)
 
       d->size[i] = regions[i].size;
     }
+
+  return 1;
 }
 
-static void
+static int
 hurd_fill_rom(struct pci_dev *d)
 {
   struct pci_xrom_bar rom;
@@ -309,7 +313,7 @@ hurd_fill_rom(struct pci_dev *d)
 
   int err = pci_get_dev_rom(device_port, &buf, &size);
   if (err)
-    return;
+    return 0;
 
   if ((char *) &rom != buf)
     {
@@ -317,7 +321,7 @@ hurd_fill_rom(struct pci_dev *d)
       if (size > sizeof(rom))
 	{
 	  vm_deallocate(mach_task_self(), (vm_address_t) buf, size);
-	  return;
+	  return 0;
 	}
 
       memcpy(&rom, buf, size);
@@ -326,28 +330,28 @@ hurd_fill_rom(struct pci_dev *d)
 
   d->rom_base_addr = rom.base_addr;
   d->rom_size = rom.size;
+
+  return 1;
 }
 
-static unsigned int
+static void
 hurd_fill_info(struct pci_dev *d, unsigned int flags)
 {
-  unsigned int done = 0;
-
   if (!d->access->buscentric)
     {
-      if (flags & (PCI_FILL_BASES | PCI_FILL_SIZES))
+      if (want_fill(d, flags, PCI_FILL_BASES | PCI_FILL_SIZES))
 	{
-	  hurd_fill_regions(d);
-	  done |= PCI_FILL_BASES | PCI_FILL_SIZES;
+	  if (hurd_fill_regions(d))
+	    clear_fill(d, PCI_FILL_BASES | PCI_FILL_SIZES);
 	}
-      if (flags & PCI_FILL_ROM_BASE)
+      if (want_fill(d, flags, PCI_FILL_ROM_BASE))
 	{
-	  hurd_fill_rom(d);
-	  done |= PCI_FILL_ROM_BASE;
+	  if (hurd_fill_rom(d))
+	    clear_fill(d, PCI_FILL_ROM_BASE);
 	}
     }
 
-  return done | pci_generic_fill_info(d, flags & ~done);
+  pci_generic_fill_info(d, flags);
 }
 
 struct pci_methods pm_hurd = {
